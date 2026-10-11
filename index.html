@@ -1,34 +1,56 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" data-theme="light">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#17140F">
+<meta name="theme-color" content="#F6F4EF">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <title>Kadar Emas</title>
+<script>
+// Terapkan tema tersimpan sebelum halaman tampil (default: terang)
+try {
+  const t = JSON.parse(localStorage.getItem('tema'));
+  if (t === 'dark') document.documentElement.dataset.theme = 'dark';
+} catch {}
+</script>
 <style>
 :root {
   --bg: #F6F4EF; --card: #FFFFFF; --text: #1C1917; --muted: #78716C;
   --line: #E7E2D8; --gold: #B7791F; --gold-2: #F0C75E; --ink: #17140F;
 }
-@media (prefers-color-scheme: dark) {
-  :root { --bg: #100E0B; --card: #1B1814; --text: #F5F1E8; --muted: #A39B8D; --line: #2E2A23; }
+[data-theme="dark"] {
+  --bg: #100E0B; --card: #1B1814; --text: #F5F1E8; --muted: #A39B8D; --line: #2E2A23;
+  --gold: #E9B949;
 }
 * { box-sizing: border-box; margin: 0; }
 body {
   font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   background: var(--bg); color: var(--text);
   -webkit-tap-highlight-color: transparent;
+  transition: background .2s, color .2s;
 }
 .app {
   max-width: 480px; margin: 0 auto; display: grid; gap: 16px;
   padding: calc(16px + env(safe-area-inset-top)) 16px calc(32px + env(safe-area-inset-bottom));
 }
+
+/* Header */
 .top { display: flex; align-items: center; gap: 12px; }
-.top svg { width: 40px; height: 40px; flex: none; }
+.top > svg { width: 40px; height: 40px; flex: none; }
+.top .judul { flex: 1; min-width: 0; }
 .top h1 { font-size: 20px; line-height: 1.2; }
 .top p { font-size: 13px; color: var(--muted); }
+.icon-btn {
+  width: 44px; height: 44px; flex: none; display: grid; place-items: center;
+  border: 1px solid var(--line); border-radius: 12px; background: var(--card); color: var(--text);
+}
+.icon-btn svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.icon-btn:active { transform: scale(.95); }
+.i-sun { display: none; }
+[data-theme="dark"] .i-sun { display: block; }
+[data-theme="dark"] .i-moon { display: none; }
 
+/* Pilihan campuran */
 .seg { display: grid; grid-template-columns: 1fr 1fr; padding: 4px; background: var(--line); border-radius: 14px; }
 .seg button {
   border: 0; background: none; padding: 12px 8px; border-radius: 10px;
@@ -36,6 +58,7 @@ body {
 }
 .seg button[aria-selected="true"] { background: var(--card); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
 
+/* Kartu & input */
 .card { background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 16px; }
 .fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 label span { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
@@ -50,7 +73,9 @@ label span { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6
 .input i { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); font-style: normal; font-size: 14px; color: var(--muted); }
 .hint { font-size: 12px; color: var(--muted); margin-top: 10px; }
 
+/* Hasil */
 .result { background: var(--ink); color: #F5F1E8; border: 0; padding: 20px; }
+[data-theme="dark"] .result { background: #1B1814; border: 1px solid var(--line); }
 .result .label { font-size: 13px; color: #A39B8D; }
 .karat { font-size: 56px; font-weight: 800; line-height: 1.1; letter-spacing: -.02em; color: var(--gold-2); font-variant-numeric: tabular-nums; }
 .karat small { font-size: 22px; font-weight: 700; margin-left: 6px; }
@@ -62,6 +87,7 @@ label span { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6
 .stats span { font-size: 11px; color: #A39B8D; }
 .warn { margin-top: 12px; font-size: 13px; color: #FFB4A8; }
 
+/* Tombol */
 .actions { display: grid; grid-template-columns: 1fr 2fr; gap: 12px; }
 .btn {
   height: 52px; border-radius: 14px; border: 1.5px solid var(--line);
@@ -72,6 +98,7 @@ label span { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6
 .btn:active:not(:disabled) { transform: scale(.98); }
 .link { border: 0; background: none; font: inherit; font-size: 13px; color: var(--muted); padding: 8px 0; }
 
+/* Riwayat */
 .history-head { display: flex; justify-content: space-between; align-items: center; }
 .history h2 { font-size: 16px; }
 .history ul { list-style: none; padding: 0; display: grid; gap: 8px; margin-top: 8px; }
@@ -82,6 +109,23 @@ label span { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6
 .history li b { font-size: 18px; color: var(--gold); white-space: nowrap; }
 .history li small { display: block; font-size: 12px; color: var(--muted); }
 .empty { font-size: 13px; color: var(--muted); margin-top: 8px; }
+
+/* Panel konfigurasi */
+dialog {
+  width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto;
+  margin: auto auto 0; border: 0; border-radius: 24px 24px 0 0;
+  background: var(--card); color: var(--text);
+  padding: 20px 16px calc(20px + env(safe-area-inset-bottom));
+}
+dialog::backdrop { background: rgba(0,0,0,.5); }
+dialog form { display: grid; gap: 16px; }
+.sheet-head { display: flex; justify-content: space-between; align-items: center; }
+.sheet-head h2 { font-size: 18px; }
+dialog h3 { font-size: 14px; margin-bottom: 8px; }
+dialog .input input { padding-right: 14px; height: 52px; font-size: 18px; }
+.rumus-teks { font-size: 13px; color: var(--muted); background: var(--bg); border-radius: 12px; padding: 10px 12px; }
+.err { font-size: 13px; color: #B42318; }
+[data-theme="dark"] .err { color: #FFB4A8; }
 </style>
 </head>
 <body>
@@ -98,10 +142,17 @@ label span { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6
       <path d="M256 96C256 96 136 232 136 312a120 120 0 0 0 240 0C376 232 256 96 256 96Z" fill="url(#g)"/>
       <polygon points="218,296 294,296 316,352 196,352" fill="#17140F"/>
     </svg>
-    <div>
+    <div class="judul">
       <h1>Kadar Emas</h1>
-      <p>Hitung karat dari timbang kering &amp; timbang air</p>
+      <p>Kalkulator karat emas</p>
     </div>
+    <button class="icon-btn" id="tema" aria-label="Ganti tema terang/gelap">
+      <svg class="i-moon" viewBox="0 0 24 24"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+      <svg class="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+    </button>
+    <button class="icon-btn" id="bukaKonfig" aria-label="Konfigurasi">
+      <svg viewBox="0 0 24 24"><path d="M4 6h8M20 6h-2M4 12h2M12 12h8M4 18h8M20 18h-2"/><circle cx="15" cy="6" r="2.5"/><circle cx="9" cy="12" r="2.5"/><circle cx="15" cy="18" r="2.5"/></svg>
+    </button>
   </header>
 
   <div class="seg" role="tablist" aria-label="Jenis campuran">
@@ -156,11 +207,48 @@ label span { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6
   </section>
 </div>
 
+<dialog id="konfig">
+  <form id="formKonfig">
+    <div class="sheet-head">
+      <h2>Konfigurasi</h2>
+      <button type="button" class="link" id="tutupKonfig">Tutup</button>
+    </div>
+    <p class="rumus-teks">Karat = (TS − a) ÷ k &nbsp;·&nbsp; TS = TK ÷ TA</p>
+
+    <div>
+      <h3>Emas + Perak</h3>
+      <div class="fields">
+        <label><span>Pengurang TS (a)</span>
+          <div class="input"><input id="perak_a" type="text" inputmode="decimal" autocomplete="off"></div></label>
+        <label><span>Pembagi (k)</span>
+          <div class="input"><input id="perak_k" type="text" inputmode="decimal" autocomplete="off"></div></label>
+      </div>
+    </div>
+
+    <div>
+      <h3>Emas + Tembaga</h3>
+      <div class="fields">
+        <label><span>Pengurang TS (a)</span>
+          <div class="input"><input id="tembaga_a" type="text" inputmode="decimal" autocomplete="off"></div></label>
+        <label><span>Pembagi (k)</span>
+          <div class="input"><input id="tembaga_k" type="text" inputmode="decimal" autocomplete="off"></div></label>
+      </div>
+    </div>
+
+    <p class="err" id="errKonfig" hidden>Isi semua kolom dengan angka. Pembagi (k) harus lebih dari 0.</p>
+
+    <div class="actions">
+      <button type="button" class="btn" id="bawaan">Nilai bawaan</button>
+      <button type="submit" class="btn primary">Simpan konfigurasi</button>
+    </div>
+  </form>
+</dialog>
+
 <script>
-// Rumus: karat = (TS - a) / k  — ubah konstanta di sini bila perlu
-const RUMUS = {
-  perak:   { nama: 'Emas + Perak',   a: 10.49, k: 0.368 },
-  tembaga: { nama: 'Emas + Tembaga', a: 10.39, k: 0.432 },
+const NAMA = { perak: 'Emas + Perak', tembaga: 'Emas + Tembaga' };
+const BAWAAN = {
+  perak:   { a: 10.49, k: 0.368 },
+  tembaga: { a: 10.39, k: 0.432 },
 };
 
 // Penyimpanan di perangkat (aman bila localStorage diblokir)
@@ -173,6 +261,7 @@ const $ = (s) => document.querySelector(s);
 const tkEl = $('#tk'), taEl = $('#ta');
 let mode = simpan.get('mode', 'perak');
 let riwayat = simpan.get('riwayat', []);
+let rumus = { ...BAWAAN, ...simpan.get('rumus', {}) };
 tkEl.value = simpan.get('tk', '');
 taEl.value = simpan.get('ta', '');
 
@@ -180,10 +269,11 @@ const num = (v) => parseFloat(String(v).replace(',', '.'));
 const fmt = (n, d = 2) =>
   n.toLocaleString('id-ID', { minimumFractionDigits: d, maximumFractionDigits: d });
 
+/* ---------- Kalkulator ---------- */
 function hitung() {
   const tk = num(tkEl.value), ta = num(taEl.value);
   if (!(tk > 0 && ta > 0)) return null;
-  const { a, k } = RUMUS[mode];
+  const { a, k } = rumus[mode];
   const ts = tk / ta;
   const karat = (ts - a) / k;
   const persen = (karat / 24) * 100;
@@ -209,7 +299,7 @@ function renderRiwayat() {
     <li>
       <div>
         ${fmt(r.persen)}% · ${fmt(r.murni, 3)} g emas murni
-        <small>${RUMUS[r.mode].nama} · TK ${fmt(r.tk)} · TA ${fmt(r.ta)} ·
+        <small>${NAMA[r.mode]} · TK ${fmt(r.tk)} · TA ${fmt(r.ta)} ·
         ${new Date(r.t).toLocaleString('id-ID', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</small>
       </div>
       <b>${fmt(r.karat)} K</b>
@@ -253,10 +343,55 @@ $('#hapus').addEventListener('click', () => {
   renderRiwayat();
 });
 
+/* ---------- Tema ---------- */
+function setTema(t) {
+  document.documentElement.dataset.theme = t;
+  document.querySelector('meta[name="theme-color"]').content = t === 'dark' ? '#100E0B' : '#F6F4EF';
+  simpan.set('tema', t);
+}
+$('#tema').addEventListener('click', () =>
+  setTema(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'));
+setTema(document.documentElement.dataset.theme);
+
+/* ---------- Konfigurasi ---------- */
+const dlg = $('#konfig');
+const KOLOM = ['perak_a', 'perak_k', 'tembaga_a', 'tembaga_k'];
+
+function isiForm(r) {
+  KOLOM.forEach((id) => {
+    const [m, f] = id.split('_');
+    $('#' + id).value = String(r[m][f]).replace('.', ',');
+  });
+  $('#errKonfig').hidden = true;
+}
+
+$('#bukaKonfig').addEventListener('click', () => { isiForm(rumus); dlg.showModal(); });
+$('#tutupKonfig').addEventListener('click', () => dlg.close());
+$('#bawaan').addEventListener('click', () => isiForm(BAWAAN));
+dlg.addEventListener('click', (e) => { if (e.target === dlg) dlg.close(); });
+
+$('#formKonfig').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const baru = { perak: {}, tembaga: {} };
+  let ok = true;
+  KOLOM.forEach((id) => {
+    const [m, f] = id.split('_');
+    const v = num($('#' + id).value);
+    if (!isFinite(v) || (f === 'k' && v <= 0)) ok = false;
+    baru[m][f] = v;
+  });
+  $('#errKonfig').hidden = ok;
+  if (!ok) return;
+  rumus = baru;
+  simpan.set('rumus', rumus);
+  dlg.close();
+  render();
+});
+
 render();
 renderRiwayat();
 
-// Ikon & manifest dibuat dari logo di atas, tanpa file tambahan
+/* ---------- PWA: ikon, manifest, service worker ---------- */
 const ikon = 'data:image/svg+xml,' + encodeURIComponent($('#logo').outerHTML);
 const tambahLink = (rel, href) => {
   const l = document.createElement('link');
@@ -270,12 +405,12 @@ if (location.protocol.startsWith('http')) {
   const manifest = {
     name: 'Kadar Emas', short_name: 'Kadar Emas', lang: 'id',
     start_url: url, scope: url.replace(/[^/]*$/, ''),
-    display: 'standalone', background_color: '#17140F', theme_color: '#17140F',
+    display: 'standalone', background_color: '#F6F4EF', theme_color: '#F6F4EF',
     icons: [{ src: ikon, sizes: 'any', type: 'image/svg+xml' }],
   };
   tambahLink('manifest', 'data:application/manifest+json,' + encodeURIComponent(JSON.stringify(manifest)));
 
-  // Opsional: aktif hanya jika ada file sw.js di folder yang sama
+  // Aktif hanya jika ada file sw.js di folder yang sama
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
 }
 </script>
