@@ -220,7 +220,7 @@ dialog .input.rp input { padding-left: 44px; }
         </div>
       </label>
     </div>
-    <p class="hint" id="status">Hasil dihitung otomatis dan tersimpan di perangkat ini.</p>
+    <p class="hint">Hasil dihitung otomatis dan tersimpan di perangkat ini.</p>
   </section>
 
   <section class="card result" aria-live="polite">
@@ -339,10 +339,12 @@ function hitung() {
   const karat = (ts - a) / k;
   const persen = (karat / 24) * 100;
   const murni = (tk * persen) / 100;
+  // Rupiah dihitung dari persentase 2 desimal, sama seperti yang tampil di layar
+  const persenBulat = Math.round(persen * 100) / 100;
   return {
     tk, ta, ts, karat, persen, murni,
-    hargaGram: (harga * persen) / 100,       // nilai tiap gram barang
-    nilai: harga * murni,                    // nilai seluruh barang
+    hargaGram: (harga * persenBulat) / 100,          // harga x persentase
+    nilai: (harga * persenBulat * tk) / 100,         // harga x persentase x TK
   };
 }
 
@@ -503,21 +505,15 @@ if (location.protocol.startsWith('http')) {
   tambahLink('manifest', 'data:application/manifest+json,' + encodeURIComponent(JSON.stringify(manifest)));
 }
 
-/* ---------- Mode offline ---------- */
+/* ---------- Mode offline (tanpa pesan di tampilan) ---------- */
 (function () {
-  const info = (t) => { $('#status').textContent = t; };
-  if (location.protocol === 'file:') return;            // file lokal sudah offline
-  if (!('serviceWorker' in navigator)) {
-    info('Mode offline tidak aktif: alamat harus HTTPS dan bukan tab penyamaran.');
-    return;
-  }
+  if (location.protocol === 'file:' || !('serviceWorker' in navigator)) return;
   const halaman = location.href.split(/[?#]/)[0];
   navigator.serviceWorker.register('sw.js')
     .then(() => navigator.serviceWorker.ready)
     .then(() => caches.open('kadar-emas-v5'))
     .then((c) => c.add(new Request(halaman, { cache: 'reload' })))
-    .then(() => info('Tersimpan di perangkat · siap dipakai offline'))
-    .catch((err) => info('Mode offline belum aktif: ' + err.message));
+    .catch((err) => console.warn('Mode offline belum aktif:', err.message));
 })();
 </script>
 </body>
