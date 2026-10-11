@@ -1,12 +1,7 @@
 // sw.js — simpan di folder yang sama dengan index.html
-const CACHE = 'kadar-emas-v4';
+const CACHE = 'kadar-emas-v5';
 
-self.addEventListener('install', (e) => {
-  e.waitUntil(
-    caches.open(CACHE).then((c) => c.add(new Request('./', { cache: 'reload' })))
-  );
-  self.skipWaiting();
-});
+self.addEventListener('install', () => self.skipWaiting());
 
 self.addEventListener('activate', (e) => {
   e.waitUntil(
@@ -16,27 +11,28 @@ self.addEventListener('activate', (e) => {
   );
 });
 
-// Tampilkan dari cache dulu, lalu perbarui cache di latar belakang bila online
+// Tampilkan dari cache dulu; perbarui cache di latar belakang bila online
 self.addEventListener('fetch', (e) => {
   const req = e.request;
   if (req.method !== 'GET' || new URL(req.url).origin !== location.origin) return;
 
-  e.respondWith((async () => {
-    const cache = await caches.open(CACHE);
-    let cached = await cache.match(req, { ignoreSearch: true });
-    if (!cached && req.mode === 'navigate') cached = await cache.match('./');
-
-    const dariJaringan = fetch(req)
-      .then((res) => {
-        if (res.ok && !res.redirected) cache.put(req, res.clone());
-        return res;
-      })
-      .catch(() => cached || Response.error());
-
-    if (cached) {
-      e.waitUntil(dariJaringan);
-      return cached;
+  const jaringan = fetch(req).then((res) => {
+    if (res.ok && !res.redirected) {
+      const salinan = res.clone();
+      caches.open(CACHE).then((c) => c.put(req, salinan));
     }
-    return dariJaringan;
-  })());
+    return res;
+  });
+  e.waitUntil(jaringan.catch(() => {}));
+
+  e.respondWith(
+    caches.open(CACHE).then(async (c) => {
+      let cached = await c.match(req, { ignoreSearch: true });
+      if (!cached && req.mode === 'navigate') {
+        const kunci = await c.keys();          // pakai halaman yang tersimpan
+        if (kunci[0]) cached = await c.match(kunci[0]);
+      }
+      return cached || jaringan;
+    })
+  );
 });
