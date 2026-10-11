@@ -463,7 +463,12 @@ if (location.protocol.startsWith('http')) {
   tambahLink('manifest', 'data:application/manifest+json,' + encodeURIComponent(JSON.stringify(manifest)));
 
   // Aktif hanya jika ada file sw.js di folder yang sama
-  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+  if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js')
+    .then(() => navigator.serviceWorker.ready)
+    .then(() => { $('.hint').textContent = 'Tersimpan di perangkat · siap dipakai offline'; })
+    .catch(() => {});
+}
 }
 </script>
 </body>
