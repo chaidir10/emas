@@ -1,8 +1,10 @@
 // sw.js — simpan di folder yang sama dengan index.html
-const CACHE = 'kadar-emas';
+const CACHE = 'kadar-emas-v4';
 
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(['./'])));
+  e.waitUntil(
+    caches.open(CACHE).then((c) => c.add(new Request('./', { cache: 'reload' })))
+  );
   self.skipWaiting();
 });
 
@@ -14,18 +16,27 @@ self.addEventListener('activate', (e) => {
   );
 });
 
-// Online: ambil versi terbaru lalu simpan ke cache. Offline: pakai cache.
+// Tampilkan dari cache dulu, lalu perbarui cache di latar belakang bila online
 self.addEventListener('fetch', (e) => {
-  if (e.request.method !== 'GET') return;
-  e.respondWith(
-    fetch(e.request)
+  const req = e.request;
+  if (req.method !== 'GET' || new URL(req.url).origin !== location.origin) return;
+
+  e.respondWith((async () => {
+    const cache = await caches.open(CACHE);
+    let cached = await cache.match(req, { ignoreSearch: true });
+    if (!cached && req.mode === 'navigate') cached = await cache.match('./');
+
+    const dariJaringan = fetch(req)
       .then((res) => {
-        const salinan = res.clone();
-        caches.open(CACHE).then((c) => c.put(e.request, salinan));
+        if (res.ok && !res.redirected) cache.put(req, res.clone());
         return res;
       })
-      .catch(() =>
-        caches.match(e.request, { ignoreSearch: true }).then((r) => r || caches.match('./'))
-      )
-  );
+      .catch(() => cached || Response.error());
+
+    if (cached) {
+      e.waitUntil(dariJaringan);
+      return cached;
+    }
+    return dariJaringan;
+  })());
 });
