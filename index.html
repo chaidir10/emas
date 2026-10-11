@@ -31,8 +31,7 @@ body {
   background: var(--bg); color: var(--text);
   -webkit-tap-highlight-color: transparent;
 }
-/* Perpindahan warna yang halus saat ganti tema */
-body, .card, .seg, .icon-btn, .btn, .input input, .stats div, .history li, dialog {
+body, .card, .seg, .icon-btn, .btn, .input input, .stats div, .harga div, .history li, dialog {
   transition: background-color .3s ease, border-color .3s ease, color .3s ease;
 }
 .app {
@@ -61,7 +60,7 @@ body, .card, .seg, .icon-btn, .btn, .input input, .stats div, .history li, dialo
 [data-theme="dark"] .i-sun { display: block; }
 [data-theme="dark"] .i-moon { display: none; }
 
-/* Pilihan campuran dengan penanda yang bergeser */
+/* Pilihan campuran */
 .seg { position: relative; display: grid; grid-template-columns: 1fr 1fr; padding: 4px; background: var(--line); border-radius: 14px; }
 .seg::before {
   content: ""; position: absolute; top: 4px; bottom: 4px; left: 4px; width: calc(50% - 4px);
@@ -91,20 +90,24 @@ label span { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6
 }
 .input input:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 4px rgba(200,137,27,.15); }
 .input i { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); font-style: normal; font-size: 14px; color: var(--muted); }
+.input.rp i { right: auto; left: 14px; }
 .hint { font-size: 12px; color: var(--muted); margin-top: 10px; }
 
 /* Hasil */
 .result { background: var(--res-bg); border-color: var(--res-line); padding: 20px; }
 .result .label { font-size: 13px; color: var(--muted); }
-.karat { font-size: 56px; font-weight: 800; line-height: 1.1; letter-spacing: -.02em; color: var(--res-num); font-variant-numeric: tabular-nums; transition: color .3s ease; }
-.karat small { font-size: 22px; font-weight: 700; margin-left: 6px; }
+.utama { font-size: 56px; font-weight: 800; line-height: 1.1; letter-spacing: -.02em; color: var(--res-num); font-variant-numeric: tabular-nums; transition: color .3s ease; }
+.utama small { font-size: 26px; font-weight: 700; margin-left: 4px; }
 .bar { height: 8px; border-radius: 99px; background: var(--res-track); overflow: hidden; margin: 14px 0 16px; transition: background-color .3s ease; }
 .bar div { height: 100%; width: 0; border-radius: 99px; background: linear-gradient(90deg, #C8891B, #F6D365); transition: width .45s var(--ease); }
 .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-.stats div { background: var(--res-sub); border-radius: 12px; padding: 10px; }
-.stats b { display: block; font-size: 16px; font-variant-numeric: tabular-nums; }
-.stats span { font-size: 11px; color: var(--muted); }
+.harga { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+.stats div, .harga div { background: var(--res-sub); border-radius: 12px; padding: 10px; min-width: 0; }
+.stats b, .harga b { display: block; font-size: 16px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.harga b { color: var(--res-num); }
+.stats span, .harga span { font-size: 11px; color: var(--muted); }
 .warn { margin-top: 12px; font-size: 13px; color: var(--danger); }
+.catatan { margin-top: 10px; font-size: 12px; color: var(--muted); }
 
 /* Tombol */
 .actions { display: grid; grid-template-columns: 1fr 2fr; gap: 12px; }
@@ -153,6 +156,7 @@ dialog form { display: grid; gap: 16px; }
 .sheet-head h2 { font-size: 18px; }
 dialog h3 { font-size: 14px; margin-bottom: 8px; }
 dialog .input input { padding-right: 14px; height: 52px; font-size: 18px; }
+dialog .input.rp input { padding-left: 44px; }
 .rumus-teks { font-size: 13px; color: var(--muted); background: var(--bg); border-radius: 12px; padding: 10px 12px; }
 .err { font-size: 13px; color: var(--danger); }
 
@@ -216,19 +220,24 @@ dialog .input input { padding-right: 14px; height: 52px; font-size: 18px; }
         </div>
       </label>
     </div>
-    <p class="hint">Hasil dihitung otomatis dan tersimpan di perangkat ini.</p>
+    <p class="hint" id="status">Hasil dihitung otomatis dan tersimpan di perangkat ini.</p>
   </section>
 
   <section class="card result" aria-live="polite">
-    <span class="label">Kadar</span>
-    <div class="karat"><span id="karat">–</span><small>K</small></div>
+    <span class="label">Persentase emas</span>
+    <div class="utama"><span id="persen">–</span><small>%</small></div>
     <div class="bar"><div id="bar"></div></div>
     <div class="stats">
-      <div><b id="persen">–</b><span>Persentase</span></div>
+      <div><b id="karat">–</b><span>Kadar</span></div>
       <div><b id="murni">–</b><span>Emas murni</span></div>
       <div><b id="ts">–</b><span>TS (berat jenis)</span></div>
     </div>
-    <p class="warn" id="warn" hidden>Hasil di luar rentang 0–24 K. Periksa angka timbangan atau jenis campuran.</p>
+    <div class="harga">
+      <div><b id="hargaGram">–</b><span>Harga per gram</span></div>
+      <div><b id="nilai">–</b><span>Nilai total</span></div>
+    </div>
+    <p class="catatan" id="catatanHarga" hidden>Isi harga emas di menu konfigurasi untuk melihat nilai rupiah.</p>
+    <p class="warn" id="warn" hidden>Hasil di luar rentang 0–100%. Periksa angka timbangan atau jenis campuran.</p>
   </section>
 
   <div class="actions">
@@ -252,6 +261,15 @@ dialog .input input { padding-right: 14px; height: 52px; font-size: 18px; }
       <h2>Konfigurasi</h2>
       <button type="button" class="link" id="tutupKonfig">Tutup</button>
     </div>
+
+    <div>
+      <h3>Harga emas murni per gram</h3>
+      <div class="input rp">
+        <i>Rp</i>
+        <input id="harga" type="text" inputmode="numeric" placeholder="0" autocomplete="off">
+      </div>
+    </div>
+
     <p class="rumus-teks">Karat = (TS − a) ÷ k &nbsp;·&nbsp; TS = TK ÷ TA</p>
 
     <div>
@@ -274,10 +292,10 @@ dialog .input input { padding-right: 14px; height: 52px; font-size: 18px; }
       </div>
     </div>
 
-    <p class="err" id="errKonfig" hidden>Isi semua kolom dengan angka. Pembagi (k) harus lebih dari 0.</p>
+    <p class="err" id="errKonfig" hidden>Isi semua kolom rumus dengan angka. Pembagi (k) harus lebih dari 0.</p>
 
     <div class="actions">
-      <button type="button" class="btn" id="bawaan">Nilai bawaan</button>
+      <button type="button" class="btn" id="bawaan">Rumus bawaan</button>
       <button type="submit" class="btn primary">Simpan konfigurasi</button>
     </div>
   </form>
@@ -297,16 +315,20 @@ const simpan = {
 };
 
 const $ = (s) => document.querySelector(s);
-const tkEl = $('#tk'), taEl = $('#ta'), segEl = $('.seg');
+const tkEl = $('#tk'), taEl = $('#ta'), segEl = $('.seg'), hargaEl = $('#harga');
 let mode = simpan.get('mode', 'perak');
 let riwayat = simpan.get('riwayat', []);
 let rumus = { ...BAWAAN, ...simpan.get('rumus', {}) };
+let harga = simpan.get('harga', 0);          // harga emas murni per gram (Rp)
 tkEl.value = simpan.get('tk', '');
 taEl.value = simpan.get('ta', '');
 
 const num = (v) => parseFloat(String(v).replace(',', '.'));
 const fmt = (n, d = 2) =>
   n.toLocaleString('id-ID', { minimumFractionDigits: d, maximumFractionDigits: d });
+const ribuan = (n) => Math.round(n).toLocaleString('id-ID');
+const rp = (n) => 'Rp ' + ribuan(n);
+const angkaSaja = (v) => parseInt(String(v).replace(/\D/g, ''), 10) || 0;
 
 /* ---------- Kalkulator ---------- */
 function hitung() {
@@ -316,7 +338,12 @@ function hitung() {
   const ts = tk / ta;
   const karat = (ts - a) / k;
   const persen = (karat / 24) * 100;
-  return { tk, ta, ts, karat, persen, murni: (tk * persen) / 100 };
+  const murni = (tk * persen) / 100;
+  return {
+    tk, ta, ts, karat, persen, murni,
+    hargaGram: (harga * persen) / 100,       // nilai tiap gram barang
+    nilai: harga * murni,                    // nilai seluruh barang
+  };
 }
 
 function render() {
@@ -325,10 +352,14 @@ function render() {
     b.setAttribute('aria-selected', b.dataset.mode === mode));
   const h = hitung();
   const valid = h && h.karat >= 0 && h.karat <= 24;
-  $('#karat').textContent = h ? fmt(h.karat) : '–';
-  $('#persen').textContent = h ? fmt(h.persen) + '%' : '–';
+  const adaHarga = harga > 0;
+  $('#persen').textContent = h ? fmt(h.persen) : '–';
+  $('#karat').textContent = h ? fmt(h.karat) + ' K' : '–';
   $('#murni').textContent = h ? fmt(h.murni, 3) + ' g' : '–';
   $('#ts').textContent = h ? fmt(h.ts) : '–';
+  $('#hargaGram').textContent = valid && adaHarga ? rp(h.hargaGram) : '–';
+  $('#nilai').textContent = valid && adaHarga ? rp(h.nilai) : '–';
+  $('#catatanHarga').hidden = adaHarga;
   $('#bar').style.width = h ? Math.max(0, Math.min(100, h.persen)) + '%' : '0';
   $('#warn').hidden = !h || valid;
   $('#simpan').disabled = !valid;
@@ -338,11 +369,11 @@ function renderRiwayat(adaBaru = false) {
   $('#list').innerHTML = riwayat.map((r, i) => `
     <li class="${adaBaru && i === 0 ? 'baru' : ''}">
       <div>
-        ${fmt(r.persen)}% · ${fmt(r.murni, 3)} g emas murni
+        ${fmt(r.karat)} K · ${fmt(r.murni, 3)} g emas murni${r.nilai > 0 ? ' · ' + rp(r.nilai) : ''}
         <small>${NAMA[r.mode]} · TK ${fmt(r.tk)} · TA ${fmt(r.ta)} ·
         ${new Date(r.t).toLocaleString('id-ID', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</small>
       </div>
-      <b>${fmt(r.karat)} K</b>
+      <b>${fmt(r.persen)}%</b>
     </li>`).join('');
   $('#empty').hidden = riwayat.length > 0;
   $('#hapus').hidden = riwayat.length === 0;
@@ -397,7 +428,7 @@ setTema(document.documentElement.dataset.theme);
 const dlg = $('#konfig');
 const KOLOM = ['perak_a', 'perak_k', 'tembaga_a', 'tembaga_k'];
 
-function isiForm(r) {
+function isiRumus(r) {
   KOLOM.forEach((id) => {
     const [m, f] = id.split('_');
     $('#' + id).value = String(r[m][f]).replace('.', ',');
@@ -406,19 +437,26 @@ function isiForm(r) {
 }
 
 function bukaKonfig() {
-  isiForm(rumus);
+  isiRumus(rumus);
+  hargaEl.value = harga > 0 ? ribuan(harga) : '';
   dlg.classList.remove('closing');
   dlg.showModal();
 }
 function tutupKonfig() {
   if (!dlg.open || dlg.classList.contains('closing')) return;
-  dlg.classList.add('closing');           // jalankan animasi turun dulu
+  dlg.classList.add('closing');
   setTimeout(() => { dlg.close(); dlg.classList.remove('closing'); }, 220);
 }
 
+// Beri titik ribuan otomatis saat mengetik harga
+hargaEl.addEventListener('input', () => {
+  const n = angkaSaja(hargaEl.value);
+  hargaEl.value = n > 0 ? ribuan(n) : '';
+});
+
 $('#bukaKonfig').addEventListener('click', bukaKonfig);
 $('#tutupKonfig').addEventListener('click', tutupKonfig);
-$('#bawaan').addEventListener('click', () => isiForm(BAWAAN));
+$('#bawaan').addEventListener('click', () => isiRumus(BAWAAN));
 dlg.addEventListener('click', (e) => { if (e.target === dlg) tutupKonfig(); });
 dlg.addEventListener('cancel', (e) => { e.preventDefault(); tutupKonfig(); });
 
@@ -435,7 +473,9 @@ $('#formKonfig').addEventListener('submit', (e) => {
   $('#errKonfig').hidden = ok;
   if (!ok) return;
   rumus = baru;
+  harga = angkaSaja(hargaEl.value);
   simpan.set('rumus', rumus);
+  simpan.set('harga', harga);
   tutupKonfig();
   render();
 });
@@ -443,7 +483,7 @@ $('#formKonfig').addEventListener('submit', (e) => {
 render();
 renderRiwayat();
 
-/* ---------- PWA: ikon, manifest, service worker ---------- */
+/* ---------- PWA: ikon & manifest ---------- */
 const ikon = 'data:image/svg+xml,' + encodeURIComponent($('#logo').outerHTML);
 const tambahLink = (rel, href) => {
   const l = document.createElement('link');
@@ -461,15 +501,24 @@ if (location.protocol.startsWith('http')) {
     icons: [{ src: ikon, sizes: 'any', type: 'image/svg+xml' }],
   };
   tambahLink('manifest', 'data:application/manifest+json,' + encodeURIComponent(JSON.stringify(manifest)));
+}
 
-  // Aktif hanya jika ada file sw.js di folder yang sama
-  if ('serviceWorker' in navigator) {
+/* ---------- Mode offline ---------- */
+(function () {
+  const info = (t) => { $('#status').textContent = t; };
+  if (location.protocol === 'file:') return;            // file lokal sudah offline
+  if (!('serviceWorker' in navigator)) {
+    info('Mode offline tidak aktif: alamat harus HTTPS dan bukan tab penyamaran.');
+    return;
+  }
+  const halaman = location.href.split(/[?#]/)[0];
   navigator.serviceWorker.register('sw.js')
     .then(() => navigator.serviceWorker.ready)
-    .then(() => { $('.hint').textContent = 'Tersimpan di perangkat · siap dipakai offline'; })
-    .catch(() => {});
-}
-}
+    .then(() => caches.open('kadar-emas-v5'))
+    .then((c) => c.add(new Request(halaman, { cache: 'reload' })))
+    .then(() => info('Tersimpan di perangkat · siap dipakai offline'))
+    .catch((err) => info('Mode offline belum aktif: ' + err.message));
+})();
 </script>
 </body>
 </html>
