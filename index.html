@@ -16,18 +16,24 @@ try {
 <style>
 :root {
   --bg: #F6F4EF; --card: #FFFFFF; --text: #1C1917; --muted: #78716C;
-  --line: #E7E2D8; --gold: #B7791F; --gold-2: #F0C75E; --ink: #17140F;
+  --line: #E7E2D8; --gold: #B7791F; --danger: #B42318;
+  --res-bg: #FFF8E6; --res-line: #F0DFAE; --res-sub: #FFFFFF; --res-track: #EFE3C2; --res-num: #A8690F;
+  --ease: cubic-bezier(.2, .8, .2, 1);
 }
 [data-theme="dark"] {
-  --bg: #100E0B; --card: #1B1814; --text: #F5F1E8; --muted: #A39B8D; --line: #2E2A23;
-  --gold: #E9B949;
+  --bg: #100E0B; --card: #1B1814; --text: #F5F1E8; --muted: #A39B8D;
+  --line: #2E2A23; --gold: #E9B949; --danger: #FFB4A8;
+  --res-bg: #1B1814; --res-line: #2E2A23; --res-sub: #25211A; --res-track: #2E2A23; --res-num: #F0C75E;
 }
 * { box-sizing: border-box; margin: 0; }
 body {
   font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   background: var(--bg); color: var(--text);
   -webkit-tap-highlight-color: transparent;
-  transition: background .2s, color .2s;
+}
+/* Perpindahan warna yang halus saat ganti tema */
+body, .card, .seg, .icon-btn, .btn, .input input, .stats div, .history li, dialog {
+  transition: background-color .3s ease, border-color .3s ease, color .3s ease;
 }
 .app {
   max-width: 480px; margin: 0 auto; display: grid; gap: 16px;
@@ -43,20 +49,33 @@ body {
 .icon-btn {
   width: 44px; height: 44px; flex: none; display: grid; place-items: center;
   border: 1px solid var(--line); border-radius: 12px; background: var(--card); color: var(--text);
+  transition: transform .18s var(--ease), background-color .3s ease, border-color .3s ease, color .3s ease;
 }
-.icon-btn svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-.icon-btn:active { transform: scale(.95); }
+.icon-btn svg {
+  width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2;
+  stroke-linecap: round; stroke-linejoin: round; transition: transform .4s var(--ease);
+}
+.icon-btn:active { transform: scale(.9); }
+.icon-btn:active svg { transform: rotate(30deg); }
 .i-sun { display: none; }
 [data-theme="dark"] .i-sun { display: block; }
 [data-theme="dark"] .i-moon { display: none; }
 
-/* Pilihan campuran */
-.seg { display: grid; grid-template-columns: 1fr 1fr; padding: 4px; background: var(--line); border-radius: 14px; }
-.seg button {
-  border: 0; background: none; padding: 12px 8px; border-radius: 10px;
-  font: inherit; font-size: 14px; font-weight: 600; color: var(--muted);
+/* Pilihan campuran dengan penanda yang bergeser */
+.seg { position: relative; display: grid; grid-template-columns: 1fr 1fr; padding: 4px; background: var(--line); border-radius: 14px; }
+.seg::before {
+  content: ""; position: absolute; top: 4px; bottom: 4px; left: 4px; width: calc(50% - 4px);
+  border-radius: 10px; background: var(--card); box-shadow: 0 1px 3px rgba(0,0,0,.12);
+  transition: transform .3s var(--ease), background-color .3s ease;
 }
-.seg button[aria-selected="true"] { background: var(--card); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+.seg[data-mode="tembaga"]::before { transform: translateX(100%); }
+.seg button {
+  position: relative; z-index: 1; border: 0; background: none; padding: 12px 8px; border-radius: 10px;
+  font: inherit; font-size: 14px; font-weight: 600; color: var(--muted);
+  transition: color .25s ease, transform .18s var(--ease);
+}
+.seg button:active { transform: scale(.96); }
+.seg button[aria-selected="true"] { color: var(--text); }
 
 /* Kartu & input */
 .card { background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 16px; }
@@ -68,35 +87,41 @@ label span { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6
   border: 1.5px solid var(--line); border-radius: 14px;
   background: var(--bg); color: var(--text);
   font-family: inherit; font-size: 20px; font-weight: 600;
+  transition: border-color .2s ease, box-shadow .2s ease, background-color .3s ease, color .3s ease;
 }
-.input input:focus { outline: none; border-color: var(--gold); }
+.input input:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 4px rgba(200,137,27,.15); }
 .input i { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); font-style: normal; font-size: 14px; color: var(--muted); }
 .hint { font-size: 12px; color: var(--muted); margin-top: 10px; }
 
 /* Hasil */
-.result { background: var(--ink); color: #F5F1E8; border: 0; padding: 20px; }
-[data-theme="dark"] .result { background: #1B1814; border: 1px solid var(--line); }
-.result .label { font-size: 13px; color: #A39B8D; }
-.karat { font-size: 56px; font-weight: 800; line-height: 1.1; letter-spacing: -.02em; color: var(--gold-2); font-variant-numeric: tabular-nums; }
+.result { background: var(--res-bg); border-color: var(--res-line); padding: 20px; }
+.result .label { font-size: 13px; color: var(--muted); }
+.karat { font-size: 56px; font-weight: 800; line-height: 1.1; letter-spacing: -.02em; color: var(--res-num); font-variant-numeric: tabular-nums; transition: color .3s ease; }
 .karat small { font-size: 22px; font-weight: 700; margin-left: 6px; }
-.bar { height: 8px; border-radius: 99px; background: #2E2A23; overflow: hidden; margin: 14px 0 16px; }
-.bar div { height: 100%; width: 0; border-radius: 99px; background: linear-gradient(90deg, #C8891B, #F6D365); transition: width .3s; }
+.bar { height: 8px; border-radius: 99px; background: var(--res-track); overflow: hidden; margin: 14px 0 16px; transition: background-color .3s ease; }
+.bar div { height: 100%; width: 0; border-radius: 99px; background: linear-gradient(90deg, #C8891B, #F6D365); transition: width .45s var(--ease); }
 .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-.stats div { background: #221E18; border-radius: 12px; padding: 10px; }
+.stats div { background: var(--res-sub); border-radius: 12px; padding: 10px; }
 .stats b { display: block; font-size: 16px; font-variant-numeric: tabular-nums; }
-.stats span { font-size: 11px; color: #A39B8D; }
-.warn { margin-top: 12px; font-size: 13px; color: #FFB4A8; }
+.stats span { font-size: 11px; color: var(--muted); }
+.warn { margin-top: 12px; font-size: 13px; color: var(--danger); }
 
 /* Tombol */
 .actions { display: grid; grid-template-columns: 1fr 2fr; gap: 12px; }
 .btn {
   height: 52px; border-radius: 14px; border: 1.5px solid var(--line);
   background: var(--card); color: var(--text); font: inherit; font-weight: 700;
+  transition: transform .18s var(--ease), box-shadow .2s ease, opacity .25s ease,
+              background-color .3s ease, border-color .3s ease, color .3s ease;
 }
-.btn.primary { border: 0; color: #17140F; background: linear-gradient(135deg, #F6D365, #C8891B); }
-.btn:disabled { opacity: .45; }
-.btn:active:not(:disabled) { transform: scale(.98); }
-.link { border: 0; background: none; font: inherit; font-size: 13px; color: var(--muted); padding: 8px 0; }
+.btn.primary {
+  border: 0; color: #17140F; background: linear-gradient(135deg, #F6D365, #C8891B);
+  box-shadow: 0 6px 16px rgba(200,137,27,.3);
+}
+.btn:disabled { opacity: .45; box-shadow: none; }
+.btn:active:not(:disabled) { transform: scale(.95); box-shadow: 0 2px 6px rgba(200,137,27,.2); }
+.link { border: 0; background: none; font: inherit; font-size: 13px; color: var(--muted); padding: 8px 0; transition: opacity .2s ease, transform .18s var(--ease); }
+.link:active { opacity: .5; transform: scale(.95); }
 
 /* Riwayat */
 .history-head { display: flex; justify-content: space-between; align-items: center; }
@@ -106,6 +131,7 @@ label span { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6
   display: flex; justify-content: space-between; align-items: center; gap: 12px;
   background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px;
 }
+.history li.baru { animation: masuk .4s var(--ease); }
 .history li b { font-size: 18px; color: var(--gold); white-space: nowrap; }
 .history li small { display: block; font-size: 12px; color: var(--muted); }
 .empty { font-size: 13px; color: var(--muted); margin-top: 8px; }
@@ -117,15 +143,28 @@ dialog {
   background: var(--card); color: var(--text);
   padding: 20px 16px calc(20px + env(safe-area-inset-bottom));
 }
+dialog[open] { animation: naik .35s var(--ease); }
+dialog.closing { animation: turun .22s ease-in forwards; }
 dialog::backdrop { background: rgba(0,0,0,.5); }
+dialog[open]::backdrop { animation: muncul .3s ease; }
+dialog.closing::backdrop { animation: hilang .22s ease forwards; }
 dialog form { display: grid; gap: 16px; }
 .sheet-head { display: flex; justify-content: space-between; align-items: center; }
 .sheet-head h2 { font-size: 18px; }
 dialog h3 { font-size: 14px; margin-bottom: 8px; }
 dialog .input input { padding-right: 14px; height: 52px; font-size: 18px; }
 .rumus-teks { font-size: 13px; color: var(--muted); background: var(--bg); border-radius: 12px; padding: 10px 12px; }
-.err { font-size: 13px; color: #B42318; }
-[data-theme="dark"] .err { color: #FFB4A8; }
+.err { font-size: 13px; color: var(--danger); }
+
+@keyframes naik   { from { transform: translateY(100%); } to { transform: none; } }
+@keyframes turun  { from { transform: none; } to { transform: translateY(100%); } }
+@keyframes muncul { from { opacity: 0; } to { opacity: 1; } }
+@keyframes hilang { from { opacity: 1; } to { opacity: 0; } }
+@keyframes masuk  { from { opacity: 0; transform: translateY(-10px) scale(.98); } to { opacity: 1; transform: none; } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after, dialog::backdrop { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
 </style>
 </head>
 <body>
@@ -258,7 +297,7 @@ const simpan = {
 };
 
 const $ = (s) => document.querySelector(s);
-const tkEl = $('#tk'), taEl = $('#ta');
+const tkEl = $('#tk'), taEl = $('#ta'), segEl = $('.seg');
 let mode = simpan.get('mode', 'perak');
 let riwayat = simpan.get('riwayat', []);
 let rumus = { ...BAWAAN, ...simpan.get('rumus', {}) };
@@ -281,7 +320,8 @@ function hitung() {
 }
 
 function render() {
-  document.querySelectorAll('.seg button').forEach((b) =>
+  segEl.dataset.mode = mode;
+  segEl.querySelectorAll('button').forEach((b) =>
     b.setAttribute('aria-selected', b.dataset.mode === mode));
   const h = hitung();
   const valid = h && h.karat >= 0 && h.karat <= 24;
@@ -294,9 +334,9 @@ function render() {
   $('#simpan').disabled = !valid;
 }
 
-function renderRiwayat() {
-  $('#list').innerHTML = riwayat.map((r) => `
-    <li>
+function renderRiwayat(adaBaru = false) {
+  $('#list').innerHTML = riwayat.map((r, i) => `
+    <li class="${adaBaru && i === 0 ? 'baru' : ''}">
       <div>
         ${fmt(r.persen)}% · ${fmt(r.murni, 3)} g emas murni
         <small>${NAMA[r.mode]} · TK ${fmt(r.tk)} · TA ${fmt(r.ta)} ·
@@ -314,7 +354,7 @@ function onInput() {
   render();
 }
 
-document.querySelector('.seg').addEventListener('click', (e) => {
+segEl.addEventListener('click', (e) => {
   const b = e.target.closest('button');
   if (!b) return;
   mode = b.dataset.mode;
@@ -334,7 +374,7 @@ $('#simpan').addEventListener('click', () => {
   if (!h) return;
   riwayat = [{ ...h, mode, t: Date.now() }, ...riwayat].slice(0, 50);
   simpan.set('riwayat', riwayat);
-  renderRiwayat();
+  renderRiwayat(true);
 });
 $('#hapus').addEventListener('click', () => {
   if (!confirm('Hapus semua riwayat?')) return;
@@ -365,10 +405,22 @@ function isiForm(r) {
   $('#errKonfig').hidden = true;
 }
 
-$('#bukaKonfig').addEventListener('click', () => { isiForm(rumus); dlg.showModal(); });
-$('#tutupKonfig').addEventListener('click', () => dlg.close());
+function bukaKonfig() {
+  isiForm(rumus);
+  dlg.classList.remove('closing');
+  dlg.showModal();
+}
+function tutupKonfig() {
+  if (!dlg.open || dlg.classList.contains('closing')) return;
+  dlg.classList.add('closing');           // jalankan animasi turun dulu
+  setTimeout(() => { dlg.close(); dlg.classList.remove('closing'); }, 220);
+}
+
+$('#bukaKonfig').addEventListener('click', bukaKonfig);
+$('#tutupKonfig').addEventListener('click', tutupKonfig);
 $('#bawaan').addEventListener('click', () => isiForm(BAWAAN));
-dlg.addEventListener('click', (e) => { if (e.target === dlg) dlg.close(); });
+dlg.addEventListener('click', (e) => { if (e.target === dlg) tutupKonfig(); });
+dlg.addEventListener('cancel', (e) => { e.preventDefault(); tutupKonfig(); });
 
 $('#formKonfig').addEventListener('submit', (e) => {
   e.preventDefault();
@@ -384,7 +436,7 @@ $('#formKonfig').addEventListener('submit', (e) => {
   if (!ok) return;
   rumus = baru;
   simpan.set('rumus', rumus);
-  dlg.close();
+  tutupKonfig();
   render();
 });
 
