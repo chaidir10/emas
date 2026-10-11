@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#17140F">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Kadar Emas</title>
+<style>
+:root {
+  --bg: #F6F4EF; --card: #FFFFFF; --text: #1C1917; --muted: #78716C;
+  --line: #E7E2D8; --gold: #B7791F; --gold-2: #F0C75E; --ink: #17140F;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #100E0B; --card: #1B1814; --text: #F5F1E8; --muted: #A39B8D; --line: #2E2A23; }
+}
+* { box-sizing: border-box; margin: 0; }
+body {
+  font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg); color: var(--text);
+  -webkit-tap-highlight-color: transparent;
+}
+.app {
+  max-width: 480px; margin: 0 auto; display: grid; gap: 16px;
+  padding: calc(16px + env(safe-area-inset-top)) 16px calc(32px + env(safe-area-inset-bottom));
+}
+.top { display: flex; align-items: center; gap: 12px; }
+.top svg { width: 40px; height: 40px; flex: none; }
+.top h1 { font-size: 20px; line-height: 1.2; }
+.top p { font-size: 13px; color: var(--muted); }
+
+.seg { display: grid; grid-template-columns: 1fr 1fr; padding: 4px; background: var(--line); border-radius: 14px; }
+.seg button {
+  border: 0; background: none; padding: 12px 8px; border-radius: 10px;
+  font: inherit; font-size: 14px; font-weight: 600; color: var(--muted);
+}
+.seg button[aria-selected="true"] { background: var(--card); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 20px; padding: 16px; }
+.fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+label span { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
+.input { position: relative; }
+.input input {
+  width: 100%; height: 56px; padding: 0 40px 0 14px;
+  border: 1.5px solid var(--line); border-radius: 14px;
+  background: var(--bg); color: var(--text);
+  font-family: inherit; font-size: 20px; font-weight: 600;
+}
+.input input:focus { outline: none; border-color: var(--gold); }
+.input i { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); font-style: normal; font-size: 14px; color: var(--muted); }
+.hint { font-size: 12px; color: var(--muted); margin-top: 10px; }
+
+.result { background: var(--ink); color: #F5F1E8; border: 0; padding: 20px; }
+.result .label { font-size: 13px; color: #A39B8D; }
+.karat { font-size: 56px; font-weight: 800; line-height: 1.1; letter-spacing: -.02em; color: var(--gold-2); font-variant-numeric: tabular-nums; }
+.karat small { font-size: 22px; font-weight: 700; margin-left: 6px; }
+.bar { height: 8px; border-radius: 99px; background: #2E2A23; overflow: hidden; margin: 14px 0 16px; }
+.bar div { height: 100%; width: 0; border-radius: 99px; background: linear-gradient(90deg, #C8891B, #F6D365); transition: width .3s; }
+.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.stats div { background: #221E18; border-radius: 12px; padding: 10px; }
+.stats b { display: block; font-size: 16px; font-variant-numeric: tabular-nums; }
+.stats span { font-size: 11px; color: #A39B8D; }
+.warn { margin-top: 12px; font-size: 13px; color: #FFB4A8; }
+
+.actions { display: grid; grid-template-columns: 1fr 2fr; gap: 12px; }
+.btn {
+  height: 52px; border-radius: 14px; border: 1.5px solid var(--line);
+  background: var(--card); color: var(--text); font: inherit; font-weight: 700;
+}
+.btn.primary { border: 0; color: #17140F; background: linear-gradient(135deg, #F6D365, #C8891B); }
+.btn:disabled { opacity: .45; }
+.btn:active:not(:disabled) { transform: scale(.98); }
+.link { border: 0; background: none; font: inherit; font-size: 13px; color: var(--muted); padding: 8px 0; }
+
+.history-head { display: flex; justify-content: space-between; align-items: center; }
+.history h2 { font-size: 16px; }
+.history ul { list-style: none; padding: 0; display: grid; gap: 8px; margin-top: 8px; }
+.history li {
+  display: flex; justify-content: space-between; align-items: center; gap: 12px;
+  background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px;
+}
+.history li b { font-size: 18px; color: var(--gold); white-space: nowrap; }
+.history li small { display: block; font-size: 12px; color: var(--muted); }
+.empty { font-size: 13px; color: var(--muted); margin-top: 8px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <svg id="logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+      <defs>
+        <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#F6D365"/>
+          <stop offset="1" stop-color="#C8891B"/>
+        </linearGradient>
+      </defs>
+      <rect width="512" height="512" rx="112" fill="#17140F"/>
+      <path d="M256 96C256 96 136 232 136 312a120 120 0 0 0 240 0C376 232 256 96 256 96Z" fill="url(#g)"/>
+      <polygon points="218,296 294,296 316,352 196,352" fill="#17140F"/>
+    </svg>
+    <div>
+      <h1>Kadar Emas</h1>
+      <p>Hitung karat dari timbang kering &amp; timbang air</p>
+    </div>
+  </header>
+
+  <div class="seg" role="tablist" aria-label="Jenis campuran">
+    <button role="tab" data-mode="perak">Emas + Perak</button>
+    <button role="tab" data-mode="tembaga">Emas + Tembaga</button>
+  </div>
+
+  <section class="card">
+    <div class="fields">
+      <label>
+        <span>Timbang Kering (TK)</span>
+        <div class="input">
+          <input id="tk" type="text" inputmode="decimal" placeholder="0,00" autocomplete="off">
+          <i>g</i>
+        </div>
+      </label>
+      <label>
+        <span>Timbang Air (TA)</span>
+        <div class="input">
+          <input id="ta" type="text" inputmode="decimal" placeholder="0,00" autocomplete="off">
+          <i>g</i>
+        </div>
+      </label>
+    </div>
+    <p class="hint">Hasil dihitung otomatis dan tersimpan di perangkat ini.</p>
+  </section>
+
+  <section class="card result" aria-live="polite">
+    <span class="label">Kadar</span>
+    <div class="karat"><span id="karat">–</span><small>K</small></div>
+    <div class="bar"><div id="bar"></div></div>
+    <div class="stats">
+      <div><b id="persen">–</b><span>Persentase</span></div>
+      <div><b id="murni">–</b><span>Emas murni</span></div>
+      <div><b id="ts">–</b><span>TS (berat jenis)</span></div>
+    </div>
+    <p class="warn" id="warn" hidden>Hasil di luar rentang 0–24 K. Periksa angka timbangan atau jenis campuran.</p>
+  </section>
+
+  <div class="actions">
+    <button class="btn" id="reset">Reset</button>
+    <button class="btn primary" id="simpan" disabled>Simpan ke riwayat</button>
+  </div>
+
+  <section class="history">
+    <div class="history-head">
+      <h2>Riwayat</h2>
+      <button id="hapus" class="link">Hapus semua</button>
+    </div>
+    <ul id="list"></ul>
+    <p class="empty" id="empty">Belum ada perhitungan tersimpan.</p>
+  </section>
+</div>
+
+<script>
+// Rumus: karat = (TS - a) / k  — ubah konstanta di sini bila perlu
+const RUMUS = {
+  perak:   { nama: 'Emas + Perak',   a: 10.49, k: 0.368 },
+  tembaga: { nama: 'Emas + Tembaga', a: 10.39, k: 0.432 },
+};
+
+// Penyimpanan di perangkat (aman bila localStorage diblokir)
+const simpan = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
+};
+
+const $ = (s) => document.querySelector(s);
+const tkEl = $('#tk'), taEl = $('#ta');
+let mode = simpan.get('mode', 'perak');
+let riwayat = simpan.get('riwayat', []);
+tkEl.value = simpan.get('tk', '');
+taEl.value = simpan.get('ta', '');
+
+const num = (v) => parseFloat(String(v).replace(',', '.'));
+const fmt = (n, d = 2) =>
+  n.toLocaleString('id-ID', { minimumFractionDigits: d, maximumFractionDigits: d });
+
+function hitung() {
+  const tk = num(tkEl.value), ta = num(taEl.value);
+  if (!(tk > 0 && ta > 0)) return null;
+  const { a, k } = RUMUS[mode];
+  const ts = tk / ta;
+  const karat = (ts - a) / k;
+  const persen = (karat / 24) * 100;
+  return { tk, ta, ts, karat, persen, murni: (tk * persen) / 100 };
+}
+
+function render() {
+  document.querySelectorAll('.seg button').forEach((b) =>
+    b.setAttribute('aria-selected', b.dataset.mode === mode));
+  const h = hitung();
+  const valid = h && h.karat >= 0 && h.karat <= 24;
+  $('#karat').textContent = h ? fmt(h.karat) : '–';
+  $('#persen').textContent = h ? fmt(h.persen) + '%' : '–';
+  $('#murni').textContent = h ? fmt(h.murni, 3) + ' g' : '–';
+  $('#ts').textContent = h ? fmt(h.ts) : '–';
+  $('#bar').style.width = h ? Math.max(0, Math.min(100, h.persen)) + '%' : '0';
+  $('#warn').hidden = !h || valid;
+  $('#simpan').disabled = !valid;
+}
+
+function renderRiwayat() {
+  $('#list').innerHTML = riwayat.map((r) => `
+    <li>
+      <div>
+        ${fmt(r.persen)}% · ${fmt(r.murni, 3)} g emas murni
+        <small>${RUMUS[r.mode].nama} · TK ${fmt(r.tk)} · TA ${fmt(r.ta)} ·
+        ${new Date(r.t).toLocaleString('id-ID', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</small>
+      </div>
+      <b>${fmt(r.karat)} K</b>
+    </li>`).join('');
+  $('#empty').hidden = riwayat.length > 0;
+  $('#hapus').hidden = riwayat.length === 0;
+}
+
+function onInput() {
+  simpan.set('tk', tkEl.value);
+  simpan.set('ta', taEl.value);
+  render();
+}
+
+document.querySelector('.seg').addEventListener('click', (e) => {
+  const b = e.target.closest('button');
+  if (!b) return;
+  mode = b.dataset.mode;
+  simpan.set('mode', mode);
+  render();
+});
+tkEl.addEventListener('input', onInput);
+taEl.addEventListener('input', onInput);
+
+$('#reset').addEventListener('click', () => {
+  tkEl.value = taEl.value = '';
+  onInput();
+  tkEl.focus();
+});
+$('#simpan').addEventListener('click', () => {
+  const h = hitung();
+  if (!h) return;
+  riwayat = [{ ...h, mode, t: Date.now() }, ...riwayat].slice(0, 50);
+  simpan.set('riwayat', riwayat);
+  renderRiwayat();
+});
+$('#hapus').addEventListener('click', () => {
+  if (!confirm('Hapus semua riwayat?')) return;
+  riwayat = [];
+  simpan.set('riwayat', riwayat);
+  renderRiwayat();
+});
+
+render();
+renderRiwayat();
+
+// Ikon & manifest dibuat dari logo di atas, tanpa file tambahan
+const ikon = 'data:image/svg+xml,' + encodeURIComponent($('#logo').outerHTML);
+const tambahLink = (rel, href) => {
+  const l = document.createElement('link');
+  l.rel = rel; l.href = href;
+  document.head.appendChild(l);
+};
+tambahLink('icon', ikon);
+
+if (location.protocol.startsWith('http')) {
+  const url = location.href.split(/[?#]/)[0];
+  const manifest = {
+    name: 'Kadar Emas', short_name: 'Kadar Emas', lang: 'id',
+    start_url: url, scope: url.replace(/[^/]*$/, ''),
+    display: 'standalone', background_color: '#17140F', theme_color: '#17140F',
+    icons: [{ src: ikon, sizes: 'any', type: 'image/svg+xml' }],
+  };
+  tambahLink('manifest', 'data:application/manifest+json,' + encodeURIComponent(JSON.stringify(manifest)));
+
+  // Opsional: aktif hanya jika ada file sw.js di folder yang sama
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+</script>
+</body>
+</html>
