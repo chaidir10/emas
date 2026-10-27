@@ -100,7 +100,7 @@ label span { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6
 .utama small { font-size: 26px; font-weight: 700; margin-left: 4px; }
 .bar { height: 8px; border-radius: 99px; background: var(--res-track); overflow: hidden; margin: 14px 0 16px; transition: background-color .3s ease; }
 .bar div { height: 100%; width: 0; border-radius: 99px; background: linear-gradient(90deg, #C8891B, #F6D365); transition: width .45s var(--ease); }
-.stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
 .harga { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
 .stats div, .harga div { background: var(--res-sub); border-radius: 12px; padding: 10px; min-width: 0; }
 .stats b, .harga b { display: block; font-size: 16px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
@@ -230,7 +230,8 @@ dialog .input.rp input { padding-left: 44px; }
     <div class="stats">
       <div><b id="karat">–</b><span>Kadar</span></div>
       <div><b id="murni">–</b><span>Emas murni</span></div>
-      <div><b id="ts">–</b><span>TS (berat jenis)</span></div>
+      <div><b id="tt">–</b><span>TT (TK − TA)</span></div>
+      <div><b id="ts">–</b><span>TS / masa jenis (TK ÷ TT)</span></div>
     </div>
     <div class="harga">
       <div><b id="hargaGram">–</b><span>Harga per gram</span></div>
@@ -270,7 +271,7 @@ dialog .input.rp input { padding-left: 44px; }
       </div>
     </div>
 
-    <p class="rumus-teks">Karat = (TS − a) ÷ k &nbsp;·&nbsp; TS = TK ÷ TA</p>
+    <p class="rumus-teks">Karat = (TS − a) ÷ k &nbsp;·&nbsp; TT = TK − TA &nbsp;·&nbsp; TS = TK ÷ TT</p>
 
     <div>
       <h3>Emas + Perak</h3>
@@ -333,16 +334,17 @@ const angkaSaja = (v) => parseInt(String(v).replace(/\D/g, ''), 10) || 0;
 /* ---------- Kalkulator ---------- */
 function hitung() {
   const tk = num(tkEl.value), ta = num(taEl.value);
-  if (!(tk > 0 && ta > 0)) return null;
+  if (!(tk > 0 && ta > 0 && tk > ta)) return null;
   const { a, k } = rumus[mode];
-  const ts = tk / ta;
+  const tt = tk - ta;              // TT = TK − TA
+  const ts = tk / tt;              // TS = TK ÷ TT
   const karat = (ts - a) / k;
   const persen = (karat / 24) * 100;
   const murni = (tk * persen) / 100;
   // Rupiah dihitung dari persentase 2 desimal, sama seperti yang tampil di layar
   const persenBulat = Math.round(persen * 100) / 100;
   return {
-    tk, ta, ts, karat, persen, murni,
+    tk, ta, tt, ts, karat, persen, murni,
     hargaGram: (harga * persenBulat) / 100,          // harga x persentase
     nilai: (harga * persenBulat * tk) / 100,         // harga x persentase x TK
   };
@@ -357,7 +359,8 @@ function render() {
   const adaHarga = harga > 0;
   $('#persen').textContent = h ? fmt(h.persen) : '–';
   $('#karat').textContent = h ? fmt(h.karat) + ' K' : '–';
-  $('#murni').textContent = h ? fmt(h.murni, 3) + ' g' : '–';
+  $('#murni').textContent = h ? fmt(h.murni) + ' g' : '–';
+  $('#tt').textContent = h ? fmt(h.tt) : '–';
   $('#ts').textContent = h ? fmt(h.ts) : '–';
   $('#hargaGram').textContent = valid && adaHarga ? rp(h.hargaGram) : '–';
   $('#nilai').textContent = valid && adaHarga ? rp(h.nilai) : '–';
@@ -371,7 +374,7 @@ function renderRiwayat(adaBaru = false) {
   $('#list').innerHTML = riwayat.map((r, i) => `
     <li class="${adaBaru && i === 0 ? 'baru' : ''}">
       <div>
-        ${fmt(r.karat)} K · ${fmt(r.murni, 3)} g emas murni${r.nilai > 0 ? ' · ' + rp(r.nilai) : ''}
+        ${fmt(r.karat)} K · ${fmt(r.murni)} g emas murni${r.nilai > 0 ? ' · ' + rp(r.nilai) : ''}
         <small>${NAMA[r.mode]} · TK ${fmt(r.tk)} · TA ${fmt(r.ta)} ·
         ${new Date(r.t).toLocaleString('id-ID', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</small>
       </div>
